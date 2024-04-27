@@ -1,7 +1,7 @@
 let selectedSquare = undefined;
 let activePlayer = 'white';
 
-let startingBoard = 
+let board = 
 [
     'br', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'br',
     'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp',
@@ -13,39 +13,81 @@ let startingBoard =
     'wr', 'wkn', 'wb', 'wq', 'wk', 'wb', 'wkn', 'wr'
 ];
 
-function availableMoves(typeOfpiece, square) {
+function availableMoves(piece, square) {
     let moves = [];
-    let leftSideReached = false;
     let currentSquare = square;
-    if (typeOfpiece === 'r') {
+    let rightSide = [7, 15, 23, 31, 39, 47, 55, 63];
+    if (piece[1] === 'r') {
+        let leftSideReached = false;
+        if (square % 8 === 0) {
+            leftSideReached = true;
+        }
         for (i = 0; i < 8; i++) {
             if (!leftSideReached) {
+                if (currentSquare !== 0) {
+                    currentSquare--;
+                } else {
+                    leftSideReached = true;
+                    currentSquare = square;
+                }
+                moves.push(currentSquare)
+                if (currentSquare % 8 === 0 || board[currentSquare] !== '') {
+                    leftSideReached = true;
+                    currentSquare = square;
+                }
+            } else {
                 currentSquare++;
                 moves.push(currentSquare);
-            } else {
-                currentSquare = currentSquare++;
-                moves.push(currentSquare);
+                if (rightSide.includes(currentSquare) || board[currentSquare] !== '') {
+                    break;
+                }
             }
-            if (currentSquare % 8 === 0) {
-                leftSideReached = true;
-                currentSquare = square;
+        }
+        let topReached = false;
+        currentSquare = square;
+        for (i = 0; i < 8; i++) {
+            if (!topReached) {
+                currentSquare -= 8;
+                if (currentSquare < 0) {
+                    topReached = true;
+                    currentSquare = square;
+                } else {
+                    moves.push(currentSquare)
+                }
+                if (board[currentSquare] !== '') {
+                    topReached = true;
+                    currentSquare = square;
+                }
+            } else {
+                currentSquare += 8;
+                if (currentSquare > 63) {
+                    break;
+                }
+                moves.push(currentSquare);
+                if (board[currentSquare] !== '') {
+                    break;
+                }
             }
         }
     }
+    console.log(moves);
     return moves;
 }
 
+let selectedSquareNum;
 function squareClicked(squareClicked, square) {
     if (selectedSquare === undefined && squareClicked.id !== '' && activePlayer[0] === squareClicked.id[0]) {
+        selectedSquareNum = square;
         selectedSquare = squareClicked;
         selectedSquare.classList.add('selected');
-    } else if (squareClicked.id[0] !== activePlayer[0] && selectedSquare !== undefined) {
+    } else if (squareClicked.id[0] !== activePlayer[0] && selectedSquare !== undefined && availableMoves(selectedSquare.id, selectedSquareNum).includes(square)) {
         if (squareClicked.querySelector('img') !== null) {
             squareClicked.querySelector('img').remove();
         }
-        
         selectedSquare.classList.remove('selected');
         squareClicked.id = selectedSquare.id;
+        board[square] = squareClicked.id;
+        board[selectedSquareNum] = '';
         const piece = selectedSquare.querySelector('.piece');
         squareClicked.appendChild(piece);
         selectedSquare.id = '';
@@ -63,7 +105,7 @@ function squareClicked(squareClicked, square) {
         selectedSquare.classList.remove('selected');
         selectedSquare = undefined;
     }
-    console.log(`Square ${selectedSquare} was clicked!`);
+    console.log(`Square ${square} was clicked!`);
 }
 
 let grid = document.querySelector('.chessboard');
@@ -73,7 +115,7 @@ for(let i = 0; i < 64; i++){
     const square = document.createElement('div');
     square.classList.add('square');
     square.classList.add(squareColor);
-    square.id = startingBoard[i];
+    square.id = board[i];
     if((i + 1) % 8 !== 0) {
         if (squareColor === 'white') {
             squareColor = 'black';
@@ -90,12 +132,12 @@ for(let i = 0; i < 64; i++){
     } else if(i === 63) {
         square.classList.add('bottom-right');
     }
-    if (startingBoard[i] !== ''){
+    if (board[i] !== ''){
         const piece = document.createElement('img');
         piece.classList.add('piece');
-        piece.src = `./images/${startingBoard[i]}.png`;
+        piece.src = `./images/${board[i]}.png`;
         square.appendChild(piece);
     }
-    square.addEventListener('click', function(){squareClicked(square), i});
+    square.addEventListener('click', function(){squareClicked(square, i)});
     grid.appendChild(square);
 }
