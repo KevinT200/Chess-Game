@@ -1,6 +1,5 @@
 let selectedSquare = undefined;
 let activePlayer = 'white';
-let rightSide = [7, 15, 23, 31, 39, 47, 55, 63];
 
 let board = 
 [
@@ -17,7 +16,7 @@ let board =
 function availableMoves(piece, square) {
     switch(piece[1]) {
         case 'r':
-            return rookMoves(square);
+            return calculateRookMoves(square);
         case 'p':
             return calculatePawnMoves(piece, square);
     }
@@ -47,7 +46,7 @@ function calculateRookMoves(square) {
         } else {
             currentSquare++;
             moves.push(currentSquare);
-            if (rightSide.includes(currentSquare) || board[currentSquare] !== '') {
+            if ((currentSquare + 1) % 8 === 0 || board[currentSquare] !== '') {
                 break;
             }
         }
