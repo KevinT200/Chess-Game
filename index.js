@@ -1,5 +1,6 @@
 let selectedSquare = undefined;
 let activePlayer = 'white';
+let rightSide = [7, 15, 23, 31, 39, 47, 55, 63];
 
 let board = 
 [
@@ -14,63 +15,101 @@ let board =
 ];
 
 function availableMoves(piece, square) {
+    switch(piece[1]) {
+        case 'r':
+            return rookMoves(square);
+        case 'p':
+            return calculatePawnMoves(piece, square);
+    }
+    return [];
+}
+
+function calculateRookMoves(square) {
     let moves = [];
     let currentSquare = square;
-    let rightSide = [7, 15, 23, 31, 39, 47, 55, 63];
-    if (piece[1] === 'r') {
-        let leftSideReached = false;
-        if (square % 8 === 0) {
-            leftSideReached = true;
-        }
-        for (i = 0; i < 8; i++) {
-            if (!leftSideReached) {
-                if (currentSquare !== 0) {
-                    currentSquare--;
-                } else {
-                    leftSideReached = true;
-                    currentSquare = square;
-                }
-                moves.push(currentSquare)
-                if (currentSquare % 8 === 0 || board[currentSquare] !== '') {
-                    leftSideReached = true;
-                    currentSquare = square;
-                }
+    let leftSideReached = false;
+    if (square % 8 === 0) {
+        leftSideReached = true;
+    }
+    for (i = 0; i < 8; i++) {
+        if (!leftSideReached) {
+            if (currentSquare !== 0) {
+                currentSquare--;
             } else {
-                currentSquare++;
-                moves.push(currentSquare);
-                if (rightSide.includes(currentSquare) || board[currentSquare] !== '') {
-                    break;
-                }
+                leftSideReached = true;
+                currentSquare = square;
             }
-        }
-        let topReached = false;
-        currentSquare = square;
-        for (i = 0; i < 8; i++) {
-            if (!topReached) {
-                currentSquare -= 8;
-                if (currentSquare < 0) {
-                    topReached = true;
-                    currentSquare = square;
-                } else {
-                    moves.push(currentSquare)
-                }
-                if (board[currentSquare] !== '') {
-                    topReached = true;
-                    currentSquare = square;
-                }
-            } else {
-                currentSquare += 8;
-                if (currentSquare > 63) {
-                    break;
-                }
-                moves.push(currentSquare);
-                if (board[currentSquare] !== '') {
-                    break;
-                }
+            moves.push(currentSquare)
+            if (currentSquare % 8 === 0 || board[currentSquare] !== '') {
+                leftSideReached = true;
+                currentSquare = square;
+            }
+        } else {
+            currentSquare++;
+            moves.push(currentSquare);
+            if (rightSide.includes(currentSquare) || board[currentSquare] !== '') {
+                break;
             }
         }
     }
-    console.log(moves);
+    let topReached = false;
+    currentSquare = square;
+    for (i = 0; i < 8; i++) {
+        if (!topReached) {
+            currentSquare -= 8;
+            if (currentSquare < 0) {
+                topReached = true;
+                currentSquare = square;
+            } else {
+                moves.push(currentSquare)
+            }
+            if (board[currentSquare] !== '') {
+                topReached = true;
+                currentSquare = square;
+            }
+        } else {
+            currentSquare += 8;
+            if (currentSquare > 63) {
+                break;
+            }
+            moves.push(currentSquare);
+            if (board[currentSquare] !== '') {
+                break;
+            }
+        }
+    }
+    return moves;
+}
+
+function calculatePawnMoves(piece, square) {
+    let moves = [];
+    if (piece[0] === 'w') {
+        if (piece[2] != 'm' && (board[square - 16] === '' && board[square - 8] === '')) {
+            moves.push(square - 16);
+        }
+        if (board[square - 8] === '') {
+            moves.push(square - 8);
+        }
+        if (board[square - 7] != '') {
+            moves.push(square - 7);
+        }
+        if (board[square - 9] != '') {
+            moves.push(square - 9);
+        }
+    } else {
+        if (piece[2] != 'm' && (board[square + 16] === '' && board[square + 8] === '')) {
+            moves.push(square + 16);
+        }
+        if (board[square + 8] === '') {
+            moves.push(square + 8);
+        }
+        if (board[square + 7] != '') {
+            moves.push(square + 7);
+        }
+        if (board[square + 9] != '') {
+            moves.push(square + 9);
+        }
+    }
     return moves;
 }
 
@@ -87,6 +126,10 @@ function squareClicked(squareClicked, square) {
         selectedSquare.classList.remove('selected');
         squareClicked.id = selectedSquare.id;
         board[square] = squareClicked.id;
+        if (board[square][1] === 'p' && board[square][2] != 'm') {
+            board[square] += 'm';
+            squareClicked.id += 'm';
+        }
         board[selectedSquareNum] = '';
         const piece = selectedSquare.querySelector('.piece');
         squareClicked.appendChild(piece);
