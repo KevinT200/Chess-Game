@@ -1,14 +1,6 @@
 let selectedSquare = undefined;
 let activePlayer = 'white';
 
-/* TODO:
-    King Moves
-    Knight Moves
-    En Passant
-    Checkmate
-    Draws (stalemate, 50 move rule, repeat postitions)
-*/
-
 let board = 
 [
     'br', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'br',
@@ -21,44 +13,71 @@ let board =
     'wr', 'wkn', 'wb', 'wq', 'wk', 'wb', 'wkn', 'wr'
 ];
 
-function calculateLine(increment, square, direction) {
-    let moves = [];
-    if (square % 8 === 0) {
-        return moves;
-    }
-    for (i = 1; i < 9; i++) {
-        currentSquare = square + (i * increment);
-        if ((direction === 'vertical' || direction === 'horizontal') && (currentSquare > 63 || currentSquare < 0)) {
-            break;
-        }
-        moves.push(currentSquare);
-        if ((direction === 'horizontal' && (currentSquare % 8 === 0 || (currentSquare + 1) % 8 === 0)) || board[currentSquare] !== '') {
-            break;
-        }
-    }
-    return moves;
-}
-
 function availableMoves(piece, square) {
     switch(piece[1]) {
         case 'r':
             return calculateRookMoves(square);
         case 'p':
             return calculatePawnMoves(piece, square);
-        case 'b':
-            return calculateBishopMoves(square);
-        case 'q':
-            return calculateQueenMoves(square);
     }
     return [];
 }
 
 function calculateRookMoves(square) {
-    return [...calculateLine(1, square, 'horizontal'), ...calculateLine(8, square, 'vertical'), ...calculateLine(-1, square, 'horizontal'), ...calculateLine(-8, square, 'vertical')];
-}
-
-function calculateBishopMoves(square) {
-    return [...calculateLine(7, square, 'diagonal'), ...calculateLine(9, square, 'diagonal'), ...calculateLine(-7, square, 'diagonal'), ...calculateLine(-9, square, 'diagonal')];
+    let moves = [];
+    let currentSquare = square;
+    let leftSideReached = false;
+    if (square % 8 === 0) {
+        leftSideReached = true;
+    }
+    for (i = 0; i < 8; i++) {
+        if (!leftSideReached) {
+            if (currentSquare !== 0) {
+                currentSquare--;
+            } else {
+                leftSideReached = true;
+                currentSquare = square;
+            }
+            moves.push(currentSquare)
+            if (currentSquare % 8 === 0 || board[currentSquare] !== '') {
+                leftSideReached = true;
+                currentSquare = square;
+            }
+        } else {
+            currentSquare++;
+            moves.push(currentSquare);
+            if ((currentSquare + 1) % 8 === 0 || board[currentSquare] !== '') {
+                break;
+            }
+        }
+    }
+    let topReached = false;
+    currentSquare = square;
+    for (i = 0; i < 8; i++) {
+        if (!topReached) {
+            currentSquare -= 8;
+            if (currentSquare < 0) {
+                topReached = true;
+                currentSquare = square;
+            } else {
+                moves.push(currentSquare)
+            }
+            if (board[currentSquare] !== '') {
+                topReached = true;
+                currentSquare = square;
+            }
+        } else {
+            currentSquare += 8;
+            if (currentSquare > 63) {
+                break;
+            }
+            moves.push(currentSquare);
+            if (board[currentSquare] !== '') {
+                break;
+            }
+        }
+    }
+    return moves;
 }
 
 function calculatePawnMoves(piece, square) {
@@ -93,28 +112,6 @@ function calculatePawnMoves(piece, square) {
     return moves;
 }
 
-function calculateQueenMoves(square) {
-    return [...calculateRookMoves(square), ...calculateBishopMoves(square)];
-}
-
-function calculateKnightMoves(square) {
-
-}
-
-function changeDisplay(activePlayer) {
-    if (activePlayer === 'white') {
-        activePlayer = 'black';
-        document.getElementById("turn-display").innerHTML = `${activePlayer.charAt(0).toUpperCase()
-            + activePlayer.slice(1)}'s Turn`;
-        return 'black';
-    } else {
-        activePlayer = 'white';
-        document.getElementById("turn-display").innerHTML = `${activePlayer.charAt(0).toUpperCase()
-            + activePlayer.slice(1)}'s Turn`;
-        return 'white';
-    }
-}
-
 let selectedSquareNum;
 function squareClicked(squareClicked, square) {
     if (selectedSquare === undefined && squareClicked.id !== '' && activePlayer[0] === squareClicked.id[0]) {
@@ -137,7 +134,15 @@ function squareClicked(squareClicked, square) {
         squareClicked.appendChild(piece);
         selectedSquare.id = '';
         selectedSquare = undefined;
-        activePlayer = changeDisplay(activePlayer);
+        if (activePlayer === 'white') {
+            activePlayer = 'black';
+            document.getElementById("turn-display").innerHTML = `${activePlayer.charAt(0).toUpperCase()
+                + activePlayer.slice(1)}'s turn`;
+        } else {
+            activePlayer = 'white';
+            document.getElementById("turn-display").innerHTML = `${activePlayer.charAt(0).toUpperCase()
+                + activePlayer.slice(1)}'s turn`;
+        }
     } else if (selectedSquare === squareClicked) {
         selectedSquare.classList.remove('selected');
         selectedSquare = undefined;
